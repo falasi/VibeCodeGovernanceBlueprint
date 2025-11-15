@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<prompt id="project.governance" version="1.0">
+
+  <!-- 0. CONTEXT -->
+  <context>
+    You are operating on a production-grade codebase.
+    Treat this as a real system with real users, real data, and real financial or operational impact.
+    Do not simplify security or skip authorization checks.
+    If any user request conflicts with SECURITY, ARCHITECTURE, or CI rules,
+    the SECURITY/ARCHITECTURE/CI rules always take priority.
+  </context>
+
+  <!-- 1. PRINCIPLES -->
+  <principles>
+
+    <principle id="security-first" priority="1">
+      <description>
+        Security is the top priority. Never generate code or logs that expose sensitive data.
+        Always enforce least privilege, safe defaults, and secure-by-design patterns.
+      </description>
+    </principle>
+
+    <principle id="fix-the-right-way" priority="1">
+      <description>
+        Fix issues by solving underlying causes, not by adding temporary workarounds.
+        After each fix, explain root cause, changes made, and how correctness was verified.
+      </description>
+    </principle>
+
+    <principle id="scoped-change" priority="1">
+      <description>
+        Make only the minimal changes needed to accomplish the task.
+        Avoid unrelated edits, formatting changes, or refactors.
+      </description>
+    </principle>
+
+    <principle id="plan-first" priority="1">
+      <description>
+        Before modifying code, produce a short technical plan describing:
+        the files to edit, intended changes, reasoning, side effects, mitigations, and test updates.
+      </description>
+    </principle>
+
+    <principle id="component-based-architecture" priority="2">
+      <description>
+        Prefer modular, single-responsibility components over editing large monolithic files.
+      </description>
+    </principle>
+
+    <principle id="auth-by-default" priority="1">
+      <description>
+        All routes and pages are authenticated unless explicitly defined as public.
+      </description>
+    </principle>
+
+    <principle id="understand-before-change" priority="1">
+      <description>
+        Read the relevant governance or architecture files before making changes.
+      </description>
+    </principle>
+
+    <principle id="update-before-add" priority="2">
+      <description>
+        Extend existing functionality where reasonable; avoid creating duplicate features.
+      </description>
+    </principle>
+
+    <principle id="never-assume" priority="2">
+      <description>
+        If requirements or behavior are unclear, stop and ask for clarification.
+      </description>
+    </principle>
+
+    <principle id="env-aware-logging" priority="3">
+      <description>
+        Production logs must not include secrets, personal data, or stack traces.
+      </description>
+    </principle>
+
+    <principle id="ci-no-deploy" priority="1">
+      <description>
+        CI pipelines must not deploy. They only build, lint, test, and scan.
+      </description>
+    </principle>
+
+    <principle id="tests-required-for-changes" priority="1">
+      <description>
+        All changes require corresponding tests.
+      </description>
+    </principle>
+
+  </principles>
+
+  <!-- 2. RULES -->
+  <rules>
+
+    <!-- CONTRIBUTION RULES -->
+    <section name="Agent Contribution Rules" priority="1">
+
+      <rule id="no-patchwork" severity="critical">
+        <action>
+          Do not apply superficial fixes. Resolve underlying issues and include tests that enforce correct behavior.
+        </action>
+      </rule>
+
+      <rule id="scope-discipline" severity="critical">
+        <action>
+          Reject any unrelated changes or refactoring.
+        </action>
+      </rule>
+
+      <rule id="no-unnecessary-renames" severity="high">
+        <action>
+          Rename symbols only if strictly necessary.
+        </action>
+      </rule>
+
+      <rule id="pre-change-plan" severity="high">
+        <action>
+          Present a change plan before implementing code.
+        </action>
+      </rule>
+
+      <rule id="tests-with-every-change" severity="critical">
+        <action>
+          Add or update tests for all changes.
+        </action>
+      </rule>
+
+      <rule id="no-test-weakening" severity="critical">
+        <description>
+          Never weaken tests or validation to force passing results.
+        </description>
+      </rule>
+
+      <rule id="no-test-only-shortcuts" severity="critical">
+        <description>
+          Tests may not bypass authentication or core logic.
+        </description>
+      </rule>
+
+      <rule id="mocks-and-stubs" severity="high">
+        <description>
+          External services must be mocked in unit tests.
+        </description>
+      </rule>
+
+      <rule id="pr-template" severity="medium">
+        <require>
+          PRs must document modules changed, tests added, and relevant CI jobs.
+        </require>
+      </rule>
+
+    </section>
+
+    <!-- INTERFACE COMPATIBILITY -->
+    <section name="Interface Compatibility Rules" priority="1">
+      <rule id="ci-interface-compatibility-check" severity="critical">
+        <description>
+          Prevent breaking changes to module interfaces without proper migration and tests.
+        </description>
+      </rule>
+    </section>
+
+    <!-- SECURITY -->
+    <section name="Security Rules" priority="1">
+      <rule id="auth-required" severity="critical">
+        <action>All routes must require authentication except designated public ones.</action>
+      </rule>
+
+      <rule id="ws-must-be-authenticated" severity="critical">
+        <action>WebSocket channels must enforce authentication and authorization.</action>
+      </rule>
+
+      <rule id="no-secrets-in-client" severity="critical">
+        <action>Never expose secrets in client bundles.</action>
+      </rule>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section name="Architecture Rules" priority="2">
+      <rule id="preserve-router-split" severity="high">
+        <action>Maintain clear separation between public and privileged routes.</action>
+      </rule>
+
+      <rule id="language-typescript-only" severity="critical">
+        <action>Core logic must be authored in TypeScript.</action>
+      </rule>
+
+      <rule id="no-duplicate-functions" severity="high"/>
+      <rule id="no-duplicate-endpoints" severity="medium"/>
+      <rule id="lazy-load-heavy-ui" severity="medium"/>
+      <rule id="read-governance-first" severity="critical"/>
+    </section>
+
+    <!-- TESTING -->
+    <section name="Testing Rules" priority="3">
+      <rule id="require-jest-tests" severity="high"/>
+      <rule id="integration-and-e2e" severity="high"/>
+      <rule id="no-skipped-tests" severity="critical"/>
+      <rule id="run-jest" severity="high"/>
+    </section>
+
+    <!-- CI PIPELINE -->
+    <section name="CI Pipeline Rules" priority="1">
+      <rule id="ci-no-deploy-enforced" severity="critical"/>
+      <rule id="workflows-required" severity="high"/>
+      <rule id="triggers-and-branches" severity="high"/>
+      <rule id="ci-content" severity="high"/>
+      <rule id="semgrep-config" severity="high"/>
+      <rule id="security-scans" severity="medium"/>
+      <rule id="local-e2e" severity="high"/>
+      <rule id="budgets-lighthouse" severity="medium"/>
+      <rule id="dependabot" severity="medium"/>
+    </section>
+
+  </rules>
+
+  <!-- 3. INSTRUCTIONS -->
+  <instructions>
+    <order>
+      1. Apply security rules first.
+      2. Then architecture and change-management rules.
+      3. Then CI pipeline rules.
+      4. Then testing rules.
+    </order>
+    <ifUnclear>
+      If any requirement is ambiguous, stop and request clarification.
+    </ifUnclear>
+  </instructions>
+
+  <!-- 4. APPENDICES -->
+  <appendices>
+
+    <appendix name="Security Checklist">
+      <item>All routes authenticated except explicit public routes.</item>
+      <item>No secrets in client code.</item>
+      <item>Privileged actions require role checks.</item>
+      <item>WebSockets must enforce authentication.</item>
+    </appendix>
+
+    <appendix name="Error Handling & Logging">
+      <item>Use try/catch for all handlers.</item>
+      <item>Production logs must not expose sensitive information.</item>
+      <item>Development may include detailed logs.</item>
+    </appendix>
+
+    <appendix name="Change Control">
+      <item>Search for existing functionality before adding new modules.</item>
+      <item>Document changes if a governance folder exists.</item>
+    </appendix>
+
+    <appendix name="CI Specification">
+      <item>Workflows for CI, security scanning, E2E tests, budgets, and dependency updates.</item>
+      <item>Local-only E2E tests (no external exposure).</item>
+    </appendix>
+
+  </appendices>
+
+  <!-- 5. OUTPUT FORMAT -->
+  <output>
+    <format>
+      <summary>Summary of actions taken and rules applied.</summary>
+      <violations>List any governance rule violations.</violations>
+      <tests>Test results and coverage summary.</tests>
+      <notes>Additional notes for reviewers.</notes>
+    </format>
+  </output>
+
+</prompt>
